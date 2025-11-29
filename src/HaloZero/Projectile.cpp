@@ -1,0 +1,181 @@
+#include "pch.h"
+#include "debugpch.h"
+#include "Projectile.h"
+#include "Constants.h"
+#include <iostream>
+
+Projectile::Projectile(const StaticTextures& textures, const Point2f& startLocation, float angle, GunType type, bool isFlipped)
+	:StaticSprite("Projectile", textures, startLocation)
+	, m_Cols{ 4 }
+	, m_Angle{ angle }
+	, m_IsFlipped{isFlipped}	
+{
+	switch (type)
+	{
+	case GunType::SmartRifle:
+		m_DrawBullet = false;
+		m_BulletSpeed = constants::SolidBulletSpeed;
+		m_Damage = 8;
+		break;
+	case GunType::MagnumPistol:
+		m_DrawBullet = false;
+		m_BulletSpeed = constants::SolidBulletSpeed;
+		m_Damage = 12;
+		break;
+	case GunType::PlasmaPistol:
+		m_BulletType = 0;
+		m_DrawBullet = true;
+		m_BulletSpeed = constants::EnergyBulletSpeed;
+		m_Damage = 8;
+		break;
+	case GunType::PlasmaRifle:
+		m_BulletType = 1;
+		m_DrawBullet = true;
+		m_BulletSpeed = constants::EnergyBulletSpeed;
+		m_Damage = 10;
+		break;
+	case GunType::Needler:
+		m_BulletType = 2;
+		m_DrawBullet = true;
+		m_BulletSpeed = constants::NeedleBulletSpeed;
+		m_Damage = 12;
+		break;
+	}
+
+	float radOffset{ float(M_PI) / 4 };
+
+	float newAngle{};
+	float dirAngle{};
+
+	if (!m_IsFlipped)
+	{
+		newAngle = angle + radOffset;
+		dirAngle = angle;
+	}
+	else 
+	{
+		newAngle = angle + 3 * radOffset;
+		dirAngle = angle - 4 * radOffset;
+	}
+
+	const float hitboxSize{ 8.f };
+	const float xMaxAngleOffset{ 30.f };
+	const float yMaxAngleOffset{ 15.f };
+
+	m_HitBox = Rectf(startLocation.x - hitboxSize / 2 + xMaxAngleOffset * cosf(newAngle),
+		startLocation.y - hitboxSize / 2 + yMaxAngleOffset * sinf(newAngle),
+		hitboxSize,
+		hitboxSize);
+
+	m_DirVelocity = Vector2f(m_BulletSpeed * cosf(dirAngle), m_BulletSpeed * sinf(dirAngle));
+}
+
+Projectile::Projectile(const StaticTextures& textures, const Point2f& startLocation, float angle, EnemyGunType enemyType, bool enemyFlipped)
+	:StaticSprite("Projectile", textures, startLocation)
+	, m_Cols{ 4 }
+	, m_Angle{ angle }
+	, m_IsFlipped{ enemyFlipped }
+{
+	switch (enemyType)
+	{
+	case EnemyGunType::PlasmaPistol:
+		m_BulletType = 0;
+		m_DrawBullet = true;
+		m_BulletSpeed = constants::EnergyBulletSpeed;
+		m_Damage = 8;
+		break;
+	case EnemyGunType::PlasmaRifle:
+		m_BulletType = 1;
+		m_DrawBullet = true;
+		m_BulletSpeed = constants::EnergyBulletSpeed;
+		m_Damage = 10;
+		break;
+	case EnemyGunType::Needler:
+		m_BulletType = 2;
+		m_DrawBullet = true;
+		m_BulletSpeed = constants::NeedleBulletSpeed;
+		m_Damage = 15;
+		break;
+	case EnemyGunType::None:
+		m_BulletType = 3;
+		m_DrawBullet = true;
+		m_BulletSpeed = 800.f;
+		m_Damage = 80;
+		break;
+	}
+
+	const float hitboxSize{ 8.f };
+	const float xMaxAngleOffset{ 30.f };
+	const float yMaxAngleOffset{ 15.f };
+
+	m_HitBox = Rectf(startLocation.x - hitboxSize / 2 + xMaxAngleOffset * cosf(angle),
+		startLocation.y - hitboxSize / 2 + yMaxAngleOffset * sinf(angle),
+		hitboxSize,
+		hitboxSize);
+
+	m_DirVelocity = Vector2f(m_BulletSpeed * cosf(angle), m_BulletSpeed * sinf(angle));
+}
+
+void Projectile::Draw() const
+{
+	if (m_DrawBullet)
+	{
+		Rectf srcRect{};
+		srcRect.width = m_pSpriteTexture->GetWidth() / m_Cols;
+		srcRect.height = m_pSpriteTexture->GetHeight();
+		srcRect.left = m_BulletType * srcRect.width;
+		srcRect.bottom = 0;
+
+		Rectf destRect{};
+		destRect.left = -srcRect.width / 2;
+		destRect.bottom = -srcRect.height / 2;
+		destRect.width = srcRect.width;
+		destRect.height = srcRect.height;
+
+		glPushMatrix();
+		glTranslatef(m_HitBox.left + m_HitBox.width / 2, m_HitBox.bottom + m_HitBox.height / 2, 0);
+
+		glRotatef(m_Angle / float(M_PI) * 180.f, 0, 0, 1);
+
+		if (m_IsFlipped)
+			glScalef(-1, 1, 1);
+
+		m_pSpriteTexture->Draw(destRect, srcRect);
+
+		glPopMatrix();
+	}
+
+#ifdef _DEBUG_HITBOX
+	utils::SetColor(Color4f(1.f, 1.f, 1.f, 1.f));
+	utils::DrawRect(m_HitBox);
+#endif
+}
+
+bool Projectile::CheckHit(const Rectf& actorShape)
+{
+	if (utils::IsOverlapping(m_HitBox, actorShape))
+	{
+		m_NeedsDeletion = true;
+		return true;
+	}
+	else return false;
+}
+
+void Projectile::UpdatePosition(float elapsedSec, const Level& level)
+{
+	if (level.IsOnGround(m_HitBox, m_DirVelocity) 
+		|| level.IsHittingWallLeft(m_HitBox, m_DirVelocity) 
+		|| level.IsHittingWallRight(m_HitBox, m_DirVelocity))
+		m_NeedsDeletion = true;
+
+	level.HandleLevelCollision(m_HitBox, m_DirVelocity);
+
+	m_HitBox.left += m_DirVelocity.x * elapsedSec;
+	m_HitBox.bottom += m_DirVelocity.y * elapsedSec;
+	m_Position = Point2f(m_HitBox.left + m_HitBox.width / 2, m_HitBox.bottom + m_HitBox.height / 2);
+}
+
+void Projectile::CheckInScreen(const Rectf& WindowRect)
+{
+
+}
