@@ -14,7 +14,7 @@ public:
 
 	void Update(float elapsedSec, const Level& level);
 
-	bool CheckDeletion();
+	bool CheckDeletion() const;
 
 private:
 	Rectf m_HitBox;
