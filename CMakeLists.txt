@@ -80,23 +80,18 @@ target_include_directories(${TARGET_NAME} PUBLIC
 	${SOURCE_DIR}/HaloZero
 )
 
-# enable c++20 features
-target_compile_features(${TARGET_NAME} PUBLIC cxx_std_20)
-set_property(TARGET ${TARGET_NAME} PROPERTY
-	CXX_STANDARD 20
-	CXX_STANDARD_REQUIRED TRUE
-	CXX_EXTENSIONS FALSE
-)
-
-# compile at max warning level + treat warnings as errors
-target_compile_options(${TARGET_NAME} PUBLIC
-  $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX /MP>
-  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>
-)
 
 target_link_libraries(${TARGET_NAME} PUBLIC 
 	SDL2::SDL2
-	SDL2::SDL2main
 	SDL2_ttf::SDL2_ttf
     SDL2_image::SDL2_image
+	SDL2_mixer::SDL2_mixer
+)
+
+# enable c++20 features
+target_compile_features(${TARGET_NAME} PUBLIC cxx_std_20)
+set_property(TARGET ${TARGET_NAME} PROPERTY
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED TRUE
+    CXX_EXTENSIONS FALSE
 )

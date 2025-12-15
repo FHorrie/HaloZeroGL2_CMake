@@ -20,9 +20,8 @@ function(load_libs)
     #    GIT_SHALLOW TRUE)
     #FetchContent_MakeAvailable(fmt)
     
-    set(SDL_STATIC OFF)
-
     message(STATUS "Downloading " sdl2...)
+    set(SDL_STATIC OFF)
     FetchContent_Declare(
         sdl2
         GIT_REPOSITORY https://github.com/libsdl-org/SDL
@@ -31,10 +30,11 @@ function(load_libs)
         OVERRIDE_FIND_PACKAGE TRUE
     )
 
-    # MSVC has no package manager, requires building packages
-    set(SDL2TTF_VENDORED ON)
+    FetchContent_MakeAvailable(sdl2)
 
+    # MSVC has no package manager, requires building packages
     message(STATUS "Downloading " sdl2_ttf...)
+    set(SDL2TTF_VENDORED ON)
     FetchContent_Declare(
         sdl2_ttf
         GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf
@@ -42,16 +42,17 @@ function(load_libs)
         GIT_SHALLOW TRUE
         OVERRIDE_FIND_PACKAGE TRUE
     )
+    FetchContent_MakeAvailable(sdl2_ttf)
 
-
-    set(SDL2IMAGE_BMP ON)
+    message(STATUS "Downloading " sdl2_image...)
+    set(SDL2IMAGE_BMP OFF)
     set(SDL2IMAGE_GIF OFF)
-    set(SDL2IMAGE_JPG ON)
+    set(SDL2IMAGE_JPG OFF)
+    set(SDL2IMAGE_JXL OFF)
     set(SDL2IMAGE_PNG ON)
 
     set(SDL2IMAGE_VENDORED ON)
     
-    message(STATUS "Downloading " sdl2_image...)
     FetchContent_Declare(
         sdl2_image
         GIT_REPOSITORY https://github.com/libsdl-org/SDL_image
@@ -59,20 +60,24 @@ function(load_libs)
         GIT_SHALLOW TRUE
         OVERRIDE_FIND_PACKAGE TRUE
     )
+    FetchContent_MakeAvailable(sdl2_image)
 
-    #set(SDL2MIXER_MP3 ON)
-    #
-    #set(SDL2MIXER_VENDORED ON)
-    #
-    #message(STATUS "Downloading " sdl2_mixer...)
-    #FetchContent_Declare(
-    #    sdl2_mixer
-    #    GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer
-    #    GIT_TAG release-2.6.3
-    #    GIT_SHALLOW TRUE
-    #    OVERRIDE_FIND_PACKAGE TRUE
-    #)
+    message(STATUS "Downloading " sdl2_mixer...)
+    set(SDL2MIXER_SAMPLES OFF)
+    set(SDL2MIXER_INSTALL OFF)
+    set(SDL2MIXER_OPUS OFF)
+    set(SDL2MIXER_FLAC OFF)
+    set(SDL2MIXER_VORBIS_STB ON)
 
-    FetchContent_MakeAvailable(sdl2 sdl2_ttf sdl2_image)
+    set(SDL2MIXER_VENDORED ON)
+   
+    FetchContent_Declare(
+        sdl2_mixer
+        GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer
+        GIT_TAG release-2.6.3
+        GIT_SHALLOW TRUE
+        OVERRIDE_FIND_PACKAGE TRUE
+    )
+    FetchContent_MakeAvailable(sdl2_mixer)
 
 endfunction()
