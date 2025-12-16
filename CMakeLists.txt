@@ -95,3 +95,10 @@ set_property(TARGET ${TARGET_NAME} PROPERTY
     CXX_STANDARD_REQUIRED TRUE
     CXX_EXTENSIONS FALSE
 )
+
+#if(WIN32)
+#    # Fix startup project for visual stuidio
+#    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${TARGET_NAME})
+#    # Fix working directory for visual studio
+#    set_target_properties(${TARGET_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${TARGET_NAME}>")
+#endif()
